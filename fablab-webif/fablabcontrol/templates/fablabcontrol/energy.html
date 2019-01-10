@@ -1,0 +1,215 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if request.user.is_superuser %}
+    <div id="chart" style="float:left;width:80%;height:400px"></div>
+    <div id="overview" style="float:right;width:20%; height:125px;"></div>
+    <div id="legend" style="float:right;width:20%; height:275px;"></div>
+{% endif %}
+
+
+
+{% block script %}
+{% load static %}
+<script type="text/javascript" src="{% static "js/flot/jquery.flot.js" %}"></script>
+<script type="text/javascript" src="{% static "js/flot/jquery.flot.time.js" %}"></script>
+<script type="text/javascript" src="{% static "js/flot/jquery.flot.navigate.js" %}"></script>
+<script type="text/javascript" src="{% static "js/flot/jquery.flot.selection.js" %}"></script>
+<script type="text/javascript">
+    var socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+
+    socket.onopen = function () {
+        onOpen();
+    };
+    socket.onclose = function (evt) {
+        onClose(evt)
+    };
+    socket.onerror = function (evt) {
+        onError(evt)
+    };
+    socket.onmessage = function (evt) {
+        onMessage(evt)
+    };
+
+    function check_ws(){
+        if(! socket || socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSockets connection lost, creating new socket...');
+            socket = null;
+            socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+            socket.onopen = function () {
+                onOpen();
+            };
+            socket.onclose = function (evt) {
+                onClose(evt)
+            };
+            socket.onerror = function (evt) {
+                onError(evt)
+            };
+            socket.onmessage = function (evt) {
+                onMessage(evt)
+            };
+        }
+    }
+
+    function onOpen() {
+      //console.log('WebSockets connection created.');
+      writeToScreen('<span style="color: green;">WebSocket connected to FabLab server....</span> ');
+    };
+
+    function onClose(evt) {
+        writeToScreen('<span style="color: red;">WebSocket DISCONNECTED</span> ');
+        //check_ws();
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">WebSocket ERROR</span> ');
+        //check_ws();
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        document.getElementById("error_log").prepend(pre);
+    }
+
+    function onMessage(evt) {
+        var data = JSON.parse(evt.data);
+        //console.log(data);
+
+        var type = data['type'];
+        if (type == 'error') {
+            var pre = document.createElement("p");
+            pre.style.wordWrap = "break-word";
+            pre.innerHTML = '<span style="color: black;">WARNING: </span>' + data['text'];
+            document.getElementById("error_log").prepend(pre);
+        }
+    };
+
+    var options = {
+            grid: {
+                clickable: true,
+                hoverable: true,
+                autoHighlight: true,
+                backgroundColor: null,
+                borderWidth: 0,
+                color: "#666",
+                labelMargin: 10,
+                axisMargin: 0,
+                mouseActiveRadius: 10,
+                minBorderMargin: 5
+            },
+            series: {
+                lines: {
+                    show: true,
+                    lineWidth: 2,
+                    steps: false,
+                    fill: true
+                },
+                points: {
+                    show:true,
+                    radius: 4,
+                    symbol: "circle",
+                    fill: true
+                }
+            },
+            xaxis: {
+                mode: "time",
+                minTickSize: [1, "day"],
+                labelWidth: "40",
+                timezone: "browser"
+            },
+            yaxis: { min: 0 },
+            selection: {
+				mode: "xy"
+			},
+            legend: {
+                show: true,
+                container: "#legend"
+            },
+            shadowSize: 0
+        };
+
+    var chart_data = {{ data|safe }};
+
+    $.plot($('#chart'), chart_data, options);
+
+    var overview = $.plot("#overview", chart_data, {
+        legend: {
+            show: false
+        },
+        series: {
+            lines: {
+                show: true,
+                lineWidth: 1
+            },
+            shadowSize: 0
+        },
+        xaxis: {
+                mode: "time",
+                minTickSize: [1, "day"],
+                labelWidth: "40"
+            },
+        yaxis: {
+            min: 0
+        },
+        grid: {
+            color: "#999"
+        },
+        selection: {
+            mode: "xy"
+        }
+    });
+
+    $("#chart").bind("plotselected", function (event, ranges) {
+
+			if (ranges.xaxis.to - ranges.xaxis.from < 0.00001) {
+				ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+			}
+
+			if (ranges.yaxis.to - ranges.yaxis.from < 0.00001) {
+				ranges.yaxis.to = ranges.yaxis.from + 0.00001;
+			}
+
+			plot = $.plot("#chart", chart_data,
+				$.extend(true, {}, options, {
+					xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+					yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to }
+				})
+			);
+			overview.setSelection(ranges, true);
+		});
+
+		$("#overview").bind("plotselected", function (event, ranges) {
+			plot.setSelection(ranges);
+		});
+
+    $("<div id='tooltip'></div>").css({
+        position: "absolute",
+        display: "none",
+        border: "1px solid #fdd",
+        padding: "2px",
+        "background-color": "#fee",
+        opacity: 0.80
+    }).appendTo("body");
+
+    $("#chart").bind("plothover", function (event, pos, item) {
+            if (item) {
+                var x = item.datapoint[0].toFixed(2),
+                    y = item.datapoint[1].toFixed(2);
+
+                $("#tooltip").html(item.series.label + " " + new Date(parseInt(x)) + " : " + y)
+                    .css({top: item.pageY+5, left: item.pageX+5})
+                    .fadeIn(200);
+            } else {
+                $("#tooltip").hide();
+            }
+
+    });
+
+    setInterval(check_ws, 5000);
+  </script>
+{% endblock script %}
+
+{% endblock content %}

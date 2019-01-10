@@ -1,0 +1,12 @@
+
+# WARNING add credentials
+{"permanent_path": "~/datalog",
+ "tmp_path": "/tmp",
+ "log_path": "~/pwlog",
+ "serial": "/dev/ttyUSB0",
+ "log_format": "epoch",
+ "mqtt_ip": "127.0.0.1",
+ "mqtt_port": "1883",
+ "mqtt_user": "plugwise2",
+ "mqtt_password": "",
+ "log_level": "debug"}

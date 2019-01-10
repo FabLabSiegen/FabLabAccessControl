@@ -1,0 +1,299 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if request.user.is_superuser and not form %}
+    <p><a href="{% url 'fablabcontrol:new_user' %}">Create new user</a>{% if fablabuser %} - <a href="{% url 'fablabcontrol:mod_user' fablabuser.id %}">Modify Fab Lab User</a>{% endif %}</p>
+{% endif %}
+{% if fablabusers %}
+    <h1>Users</h1>
+    <div class="table-responsive">
+	<table class="table table-striped table-hover">
+        <tr>
+        <th>Username</th>
+        {% if request.user.is_superuser %}<th>RFID UUID</th>{% endif %}
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+         {% if request.user.is_superuser %}<th></th>{% endif %}
+        </tr>
+    {% for fablabuser in fablabusers %}
+        <tr>
+          <td><a href="{% url 'fablabcontrol:user' fablabuser.id %}">{{ fablabuser.user.username }}</a></td>
+          {% if request.user.is_superuser %}<td>{{ fablabuser.rfid_uuid }}</td>{% endif %}
+          <td>{{ fablabuser.user.first_name }}</td>
+          <td>{{ fablabuser.user.last_name }}</td>
+          <td>{{ fablabuser.user.email }}</td>
+          {% if request.user.is_superuser %}<td><a href="{% url 'fablabcontrol:mod_user' fablabuser.id %}"><strong>Modify</strong></a></td>{% endif %}
+        </tr>
+    {% endfor %}
+    </table>
+	</div>
+{% elif fablabuser and form and request.user.is_superuser %}
+    <h1>Modify {{ fablabuser.user.first_name }} {{ fablabuser.user.last_name }}</h1>
+
+    {% load i18n widget_tweaks %}
+    <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% include "./formfields.html" %}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Update User" %}</button>
+            </div>
+        </div>
+    </form>
+
+
+    <H3>Add media</H3>
+    <div class="row">
+         <p>
+            <button class="btn btn-default btn-lg" id="start_video">Start Video</button>
+        </p>
+         <p>
+            <button class="btn btn-default btn-lg" id="snap">Take Photo</button>
+        </p>
+         <p>
+            <button class="btn btn-default btn-lg" id="set_photo">Send Photo</button>
+        </p>
+        <p>
+            <video id="video" width="320" height="240"></video>
+        </p>
+
+        <canvas id="user_picture_view" width="320" height="240"></canvas>
+        <canvas id="user_picture" width="1024" height="768"></canvas>
+
+    </div
+
+
+
+{% elif form and request.user.is_superuser %}
+    <h1>Create Fab Lab User</h1>
+    {% load i18n widget_tweaks %}
+
+    <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% include "./formfields.html" %}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Create Machine" %}</button>
+            </div>
+        </div>
+    </form>
+
+
+{% elif fablabuser %}
+    <h1><a href="{% url 'fablabcontrol:users' %}">User</a> {{ fablabuser.user.first_name }} {{ fablabuser.user.last_name }}</h1>
+    <div class="table-responsive">
+	<table class="table table-striped table-hover">
+        <tr><td width="25%"><strong>Username</strong></td><td>{{ fablabuser.user.username }}</td></tr>
+        {% if request.user.is_superuser %}<tr><td><strong>RFID UUID</strong></td><td>{{ fablabuser.rfid_uuid }}</td></tr>{% endif %}
+        <tr><td><strong>First name</strong></td><td>{{ fablabuser.user.first_name}}</td></tr>
+        <tr><td><strong>Last name</strong></td><td>{{ fablabuser.user.last_name }}</td></tr>
+        <tr><td><strong>eMail</strong></td><td>{{ fablabuser.user.email }}</td></tr>
+        {% if fablabuser.image %}<tr><td><strong>Image</strong></td><td><img src="{{ fablabuser.image.url }}" style="max-width:200px;"/></td></tr>{% endif %}
+        <tr><td><strong>Assigned to <a href="{% url 'fablabcontrol:machines' %}">machines</a></strong></td>
+                <td>
+                {% for machine in fablabuser.machines.all %}
+                    <a href="{% url 'fablabcontrol:machine' machine.id %}">{{ machine.name }}</a>,
+                {% endfor %}
+                </td>
+            </tr>
+        <tr><td><strong>Passed <a href="{% url 'fablabcontrol:briefings' %}">briefings</a></strong></td>
+            <td>
+            {% for briefing in fablabuser.briefings.all %}
+                <a href="{% url 'fablabcontrol:briefing' briefing.id %}">{{ briefing.name }}</a>,
+            {% endfor %}
+            </td>
+        </tr>
+    </table>
+	</div>
+    {% if request.user.is_superuser %}
+        {% if fablabuser.activities %}
+        <a href="{% url 'fablabcontrol:user_activity' fablabuser.id %}"><H3>Activity monitor</H3></a>
+        <div class="table-responsive">
+	<table class="table table-striped table-hover">
+             <tr>
+            <th>Machine</th>
+            <th>Start </th>
+            <th>Stop</th>
+            <th>Description</th>
+            <th>Documents</th>
+            <th></th>
+            </tr>
+            {% for project in fablabuser.activities.all|dictsortreversed:"datestart"|slice:":5" %}
+                <tr  style="vertical-align:top">
+                <td ><a href="{% url 'fablabcontrol:machine' project.machine.id %}">{{ project.machine.name|escape}}</a></td>
+                <td>{{ project.datestart|date:"D d M Y" }}  {{ project.datestart|time:"H:i" }}</td>
+                <td>{{ project.datestop|date:"D d M Y" }}  {{ project.datestop|time:"H:i" }}</td>
+                <td>{{ project.description|escape|linebreaks|truncatewords_html:15  }}</td>
+                 <td>
+                     {% for doc in project.documents.all %}
+                        <a href="{{ doc }}">{{ forloop.counter }}</a>,
+                     {% endfor %}
+                </td>
+                <td align="right"><strong><a href="{% url 'fablabcontrol:mod_activity' project.id %}">Modify</a></strong></td>
+                </tr>
+            {% endfor %}
+    </table>
+	</div>
+        {% endif %}
+        {% if fablabuser.maintenances %}
+            <H3><a href="{% url 'fablabcontrol:user_maintenance' fablabuser.id %}">Maintenance</a></H3>
+            <div class="table-responsive">
+            <table class="table table-striped table-hover">
+             <tr>
+                <th>Machine</th>
+                <th>Scheduled for</th>
+                <th>Planned duration </th>
+                <th>Start </th>
+                <th>Stop</th>
+                <th>ToDo</th>
+                <th>Done</th>
+                <th>Documents</th>
+                <th></th>
+            </tr>
+
+             {% for project in fablabuser.maintenances.all|dictsortreversed:"start"|slice:":5" %}
+                <tr  style="vertical-align:top">
+                    <td><a href="{% url 'fablabcontrol:machine' project.machine.id %}">{{ project.machine.name|escape}}</a></td>
+                    <td>{{ project.scheduled|date:"D d M Y" }}  {{ project.scheduled|time:"H:i" }}</td>
+                    <td>{{ project.duration|time:"H:i"  }}</td>
+                    <td>{{ project.start|date:"D d M Y" }}  {{ project.start|time:"H:i" }}</td>
+                    <td>{{ project.stop|date:"D d M Y" }}  {{ project.stop|time:"H:i" }}</td>
+                    <td>{{ project.todo|escape }}</td>
+                    <td>{{ project.done|escape|linebreaks|truncatewords_html:15 }}</td>
+                    <td>
+                         {% for doc in project.documents.all %}
+                            <a href="{{ doc }}">{{ doc  }}</a>,
+                         {% endfor %}
+                    </td>
+                    <td align="right"><strong><a href="{% url 'fablabcontrol:mod_maintenance' project.id %}">Modify</a></strong></td>
+                </tr>
+                {% endfor %}
+            </table>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{% block script %}
+  <script type="text/javascript">
+    //websocket
+    var socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+
+    socket.onopen = function () {
+        onOpen();
+    };
+    socket.onclose = function (evt) {
+        onClose(evt)
+    };
+    socket.onerror = function (evt) {
+        onError(evt)
+    };
+    socket.onmessage = function (evt) {
+        onMessage(evt)
+    };
+
+    function check_ws(){
+        if(! socket || socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSockets connection lost, creating new socket...');
+            socket = null;
+            socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+            socket.onopen = function () {
+                onOpen();
+            };
+            socket.onclose = function (evt) {
+                onClose(evt)
+            };
+            socket.onerror = function (evt) {
+                onError(evt)
+            };
+            socket.onmessage = function (evt) {
+                onMessage(evt)
+            };
+        }
+    }
+
+    function onOpen() {
+      //console.log('WebSockets connection created.');
+      writeToScreen('<span style="color: green;">WebSocket connected to FabLab server....</span> ');
+    };
+
+    function onClose(evt) {
+        writeToScreen('<span style="color: red;">WebSocket DISCONNECTED</span> ');
+        //check_ws();
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">WebSocket ERROR</span> ');
+        //check_ws();
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        document.getElementById("error_log").prepend(pre);
+    }
+
+    function onMessage(evt) {
+        var data = JSON.parse(evt.data);
+        //console.log(data);
+
+        var type = data['type'];
+        if (type == 'error') {
+            var pre = document.createElement("p");
+            pre.style.wordWrap = "break-word";
+            pre.innerHTML = '<span style="color: black;">WARNING: </span>' + data['text'];
+            document.getElementById("error_log").prepend(pre);
+        }
+    };
+
+    // Elements for taking the snapshot
+    var user_picture = document.getElementById('user_picture');
+    if (user_picture != null) {
+        var user_picture_view = document.getElementById('user_picture_view');
+        user_picture.style.display="none";
+        var c_save = user_picture.getContext('2d');
+        var c_view= user_picture_view.getContext('2d');
+        var video = document.getElementById('video');
+        var username = document.getElementById('id_username');
+
+        // Start video
+        document.getElementById("start_video").addEventListener("click", function() {
+            // Get access to the camera!
+            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    video.src = window.URL.createObjectURL(stream);
+                    //video.play();
+                });
+            }
+            video.play();
+        });
+
+        // Trigger photo take
+        document.getElementById("snap").addEventListener("click", function() {
+           c_view.drawImage(video, 0, 0, 320, 240);
+           c_save.drawImage(video, 0, 0, 1024, 768);
+        });
+
+        // Trigger photo send
+        document.getElementById("set_photo").addEventListener("click", function() {
+            //in base64 konvertieren
+            var image = user_picture.toDataURL("image/png", 1.0);
+            //infos abschneiden
+            var data = image.substr(22);
+            var msg = "{\"cmd\":\"userimage\", \"fablabuser\":\"" + username.value + "\", \"data\":\"" + data + "\"}";
+            socket.send(msg);
+        });
+    }
+
+    setInterval(check_ws, 5000);
+
+  </script>
+{% endblock script %}
+
+{% endblock content %}
+

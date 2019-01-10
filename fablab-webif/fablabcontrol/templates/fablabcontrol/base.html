@@ -1,0 +1,88 @@
+
+{% extends "bootstrap_ui/bootstrap-skeleton.html" %}
+{% load bootstrap_ui_tags %}
+
+{# enable referencing of static content #}
+{% load static %}
+
+<!doctype html>
+
+
+{% block head-title %}Fab Lab Access Control{% endblock %}
+
+{# We want to reference our local css, so we override the block from the bootstrap framework #}
+{% block head-css %}
+    {% get_value_from_session_or_cookie 'DJANGO_BOOTSTRAP_UI_THEME' as theme %}
+
+    {% if theme|slice:':11' == 'bootswatch-' %}
+        <!-- Bootswatch theme styles -->
+        <link href="{% static "bootswatch/" %}{{ theme|slice:'11:' }}/bootstrap.min.css" rel="stylesheet" type="text/css">
+    {% else %}
+        <!-- Bootstrap base styles -->
+        <link href="{% static "bootstrap/bootstrap.min.css" %}" rel="stylesheet" type="text/css">
+
+        {% if theme == 'bootstrap' %}
+            <!-- Bootstrap theme styles -->
+            <link href="{% static "bootstrap/bootstrap-theme.min.css" %}" rel="stylesheet" type="text/css">
+        {% endif %}
+    {% endif %}
+
+    <!-- Font Awesome icon font -->
+    <!-- <link href="{% static "font-awesome/fontawesome-all.min.css" %}" rel="stylesheet" type="text/css"> -->
+{% endblock %}
+
+{% block head-javascript %}
+
+
+<script type="text/javascript" src="{% static "js/jquery-3.2.1.js" %}"></script>
+<script type="text/javascript" src="{% static "js/bootstrap.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/moment.js" %}"></script>
+<script type="text/javascript" src="{% static "js/bootstrap-datetimepicker.min.js" %}"></script>
+<script type="text/javascript" src="{% static "font-awesome/fontawesome-all.min.js" %}"></script>
+
+{% endblock %}
+
+{% block body-content %}
+    
+    <div class="container-fluid">
+        {# <div class="page-header"> #}
+         <h3>Fab Lab Siegen <small>Access Control</small></h3>
+        {# </div> #}
+    </div>
+
+    {% include "./navigation.html" %}
+
+
+    {% container type="fluid" %}
+
+
+   
+        {% block content %}
+
+
+
+
+
+
+
+
+
+        <!-- Content is added in subtemplates-->
+        {% endblock content %}
+    {% endcontainer %}
+
+    <footer role="contentinfo" class="site-footer">
+        <div class="container" id="error_log"  style="float:right;width:90%;height:20%"></div>
+    </footer>
+
+
+
+{% endblock %}
+
+
+{% block body-javascript %}
+{# be careful, the bootstrap framework uses jquery 1.4.x, we are using 3.x. So when there are problems, search here #}
+
+{% endblock %}
+
+ 

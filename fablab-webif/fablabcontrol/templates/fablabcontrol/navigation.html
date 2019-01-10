@@ -1,0 +1,136 @@
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{% url 'fablabcontrol:index' %}">
+        {% load static %}
+        <img alt="Fab Lab" src="{% static "logos/tool_logo_60.png" %}" width="22">
+      </a>
+
+    </div>
+
+    <div class="collapse navbar-collapse">
+      {% if user.is_authenticated %}
+      <ul class="nav navbar-nav">
+
+        <!-- ESPs -->
+        <li class="dropdown {% if nav_position == "esps" %}active{% endif %}" id="esps">
+
+          <a href="{% url 'fablabcontrol:esps' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">ESPs
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:esps' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_esp' %}">Create</a></li>
+          </ul>
+        </li>
+        <!-- Machines -->
+        <li class="dropdown {% if nav_position == "machines" %}active{% endif %}">
+          <a href="{% url 'fablabcontrol:machines' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Machines
+            <span class="caret"></span>
+          </a>
+        <!-- Dropdown elements -->
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:machines' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_machine' %}">Create</a></li>
+          </ul>
+        </li>
+        <!-- Circles -->
+        <li class="dropdown {% if nav_position == "circles" %}active{% endif %}">
+          <a href="{% url 'fablabcontrol:circles' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Circles
+            <span class="caret"></span>
+          </a>
+        <!-- Dropdown elements -->
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:circles' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_circle' %}">Create</a></li>
+          </ul>
+        </li>
+        <!-- Users -->
+        <li class="dropdown {% if nav_position == "users" %}active{% endif %}">
+          <a href="{% url 'fablabcontrol:users' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Users
+            <span class="caret"></span>
+          </a>
+        <!-- Dropdown elements -->
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:users' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_user' %}">Create</a></li>
+          </ul>
+        </li>
+
+        <!-- Activities -->
+        <li class="dropdown {% if nav_position == "activities" %}active{% endif %}">
+          <a href="{% url 'fablabcontrol:activities' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Activities
+            <span class="caret"></span>
+          </a>
+        <!-- Dropdown elements -->
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:activities' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_activity' %}">Create</a></li>
+          </ul>
+        </li>
+
+      <!-- Maintenances -->
+        <li class="dropdown {% if nav_position == "maintenances" %}active{% endif %}">
+          <a href="{% url 'fablabcontrol:maintenances' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Maintenances
+            <span class="caret"></span>
+          </a>
+        <!-- Dropdown elements -->
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:maintenances' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_maintenance' %}">Create</a></li>
+          </ul>
+        </li>
+
+      <!-- Briefings -->
+        <li class="dropdown {% if nav_position == "briefings" %}active{% endif %}">
+          <a href="{% url 'fablabcontrol:briefings' %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Briefings
+            <span class="caret"></span>
+          </a>
+        <!-- Dropdown elements -->
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'fablabcontrol:briefings' %}">List</a></li>
+            <li><a href="{% url 'fablabcontrol:new_briefing' %}">Create</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      {% endif %}
+
+      <ul class="nav navbar-nav navbar-right">
+        {% if not user.is_authenticated %}
+
+          <li>
+            <a href="{% url 'fablabcontrol:log_in' %}">Login</a>
+          </li>
+
+        {% else %}
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            Signed in as {{ user.first_name}}
+            <span class="caret"></span>
+            </a>
+        <!-- Dropdown elements -->
+            <ul class="dropdown-menu">
+              <li><a href="{% url 'fablabcontrol:log_out' %}">Logout</a>
+              </li>
+            </ul>
+          </li>
+        {% endif %}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+
+
+
+
+

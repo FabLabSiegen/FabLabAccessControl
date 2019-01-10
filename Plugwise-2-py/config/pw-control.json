@@ -1,0 +1,159 @@
+{
+    "log_level": "debug",
+    "dynamic": [
+        {
+            "switch_state": "on",
+            "name": "circle+",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "LulzBot TAZ",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "MakerBot 2X",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "PrintrBot",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Markforged 1",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Markforged 2",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "MakerBot Replicator",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Formlabs Form 1",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Ultimaker 2 Extended",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "AYA",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "no"
+        },
+        {
+            "switch_state": "on",
+            "name": "iMac",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Surface Staender",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Lotstation und Absauger",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "EAS Laser",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "EAS Fraese",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "Staenderbohrmaschine",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        },
+        {
+            "switch_state": "on",
+            "name": "X-Carve Fraese",
+            "schedule_state": "off",
+            "schedule": "",
+            "mac": "0000000000000000",
+            "savelog": "yes",
+            "monitor": "yes"
+        }
+    ],
+    "log_comm": "no"
+}

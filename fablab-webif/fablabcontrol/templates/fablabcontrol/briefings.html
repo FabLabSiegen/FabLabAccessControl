@@ -1,0 +1,172 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if request.user.is_superuser and not form %}
+        <p><a href="{% url 'fablabcontrol:new_briefing' %}">Create new briefing</a>{% if briefing %} - <a href="{% url 'fablabcontrol:mod_briefing' briefing.id %}">Modify briefing</a>{% endif %}</p>
+{% endif %}
+{% if briefings %}
+    <h1>Fab Lab Briefings</h1>
+    <div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Documents</th>
+            <th scope="col"></th>
+        </tr>
+        {% for briefing in briefings.all %}
+        <tr style="vertical-align:top">
+            <td>{{ briefing.name|escape}}</td>
+            <td>{{ briefing.description|escape|linebreaks|truncatewords_html:15 }}</td>
+            <td>
+            {% for doc in briefing.documents.all %}
+                <a href="{{ doc }}">{{ forloop.counter }}</a>,
+            {% endfor %}
+            </td>
+            {% if request.user.is_superuser %}
+                <td colspan="2" align="left"><strong><a href="{% url 'fablabcontrol:mod_briefing' briefing.id %}">Modify</a></st></td>
+            {% endif %}
+        </tr>
+            {% endfor %}
+    </table>
+    </div>
+{% elif briefing and form %}
+    {% if request.user.is_superuser %}
+    <h1>Modify Briefing</h1>
+
+    {% load i18n widget_tweaks %}
+    <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% include "./formfields.html" %}
+        <div class="form-group">
+                <label class="col-sm-2 control-label">Documents</label>
+                <div class="col-sm-8 col-lg-6">
+                    <p class="form-control-static">
+                        {% for doc in briefing.documents.all %}
+                        <a href="{{ doc }}">{{ forloop.counter }}</a>{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Update Briefing" %}</button>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+{% elif form %}
+    {% if request.user.is_superuser %}
+    <h1>Create Briefing</h1>
+
+    {% load i18n widget_tweaks %}
+    <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% include "./formfields.html" %}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Create Briefing" %}</button>
+            </div>
+        </div>
+    </form>
+
+    {% endif %}
+{% elif briefing %}
+    <h1><a href="{% url 'fablabcontrol:briefings' %}">Briefing</a> {{ briefing.name|escape}}</h1>
+    <div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <tr><td width="25%"><strong>Name</strong></td><td>{{ briefing.name|escape}}</td></tr>
+        <tr><td><strong>Description</strong></td><td>{{ briefing.description|escape|linebreaks }}</td></tr>
+        <tr><td><strong>Documents</strong></td>
+            <td>
+            {% for doc in briefing.documents.all %}
+                <a href="{{ doc }}">{{ forloop.counter }}</a>{% if not forloop.last %}, {% endif %}
+            {% endfor %}</td></tr>
+    </table>
+    </div>
+{% endif %}
+
+
+{% block script %}
+<script type="text/javascript">
+    var socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+
+    socket.onopen = function () {
+        onOpen();
+    };
+    socket.onclose = function (evt) {
+        onClose(evt)
+    };
+    socket.onerror = function (evt) {
+        onError(evt)
+    };
+    socket.onmessage = function (evt) {
+        onMessage(evt)
+    };
+
+    function check_ws(){
+        if(! socket || socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSockets connection lost, creating new socket...');
+            socket = null;
+            socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+            socket.onopen = function () {
+                onOpen();
+            };
+            socket.onclose = function (evt) {
+                onClose(evt)
+            };
+            socket.onerror = function (evt) {
+                onError(evt)
+            };
+            socket.onmessage = function (evt) {
+                onMessage(evt)
+            };
+        }
+    }
+
+    function onOpen() {
+      //console.log('WebSockets connection created.');
+      writeToScreen('<span style="color: green;">WebSocket connected to FabLab server....</span> ');
+    };
+
+    function onClose(evt) {
+        writeToScreen('<span style="color: red;">WebSocket DISCONNECTED</span> ');
+        //check_ws();
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">WebSocket ERROR</span> ');
+        //check_ws();
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        document.getElementById("error_log").prepend(pre);
+    }
+
+    function onMessage(evt) {
+        var data = JSON.parse(evt.data);
+        //console.log(data);
+
+        var type = data['type'];
+
+        if (type == 'error') {
+            var pre = document.createElement("p");
+            pre.style.wordWrap = "break-word";
+            pre.innerHTML = '<span style="color: black;">WARNING: </span>' + data['text'];
+            document.getElementById("error_log").prepend(pre);
+        }
+    };
+
+    setInterval(check_ws, 5000);
+
+  </script>
+{% endblock script %}
+
+{% endblock content %}

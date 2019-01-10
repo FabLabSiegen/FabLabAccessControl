@@ -1,0 +1,39 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+<h1>Login</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+{% load i18n widget_tweaks %}
+
+<form class="form-horizontal row" role="form" action="{% url 'fablabcontrol:log_in' %}" method="post">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="id_{{ form.username.name }}">Username</label>
+        <div class="col-sm-8 col-lg-6">
+            {{ form.username|attr:"class:form-control"|attr:"placeholder:Username" }}
+            {% if field.help_text %}
+                <p class="help-block"><small>{{ field.help_text }}</small></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="id_{{ form.password.name }}">Password</label>
+        <div class="col-sm-8 col-lg-6">
+            {{ form.password|attr:"class:form-control"|attr:"placeholder:Password" }}
+            {% if field.help_text %}
+                <p class="help-block"><small>{{ field.help_text }}</small></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Login" %}</button>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

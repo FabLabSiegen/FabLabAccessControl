@@ -1,0 +1,226 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if not form %}
+    <p><a href="{% url 'fablabcontrol:new_maintenance' %}">Create new maintenance</a>{% if maintenance %} - <a href="{% url 'fablabcontrol:mod_maintenance' maintenance.id %}">Modify maintenance</a>{% endif %}</p>
+{% endif %}
+{% if machine or fablabuser or maintenances %}
+    {% if machine %}
+        <h1><a href="{% url 'fablabcontrol:maintenances' %}">Maintenance</a> of machine <a href="{% url 'fablabcontrol:machine' machine.id %}">{{ machine.name|escape  }}</a></h1>
+    {% elif fablabuser %}
+        <h1><a href="{% url 'fablabcontrol:maintenances' %}">Maintenance</a> done by user <a href="{% url 'fablabcontrol:user' fablabuser.id %}">{{ fablabuser.user.first_name|escape}} {{ fablabuser.user.last_name|escape}}</a></h1>
+    {% elif maintenances %}
+        <h1>Fab Lab Maintenances</h1>
+    {% endif %}
+    <div class="table-responsive">
+	<table class="table table-striped table-hover">
+         <tr>
+        {% if machine %}
+             <th scope="col">Fab Lab User</th>
+        {% elif fablabuser %}
+             <th scope="col">Machine</th>
+        {% elif maintenances%}
+            <th scope="col">Machine</th>
+            <th scope="col">Fab Lab User</th>
+        {% endif %}
+        <th scope="col">Scheduled for</th>
+        <th scope="col">Planned duration </th>
+        <th scope="col">Start </th>
+        <th scope="col">Stop</th>
+        <th scope="col">ToDo</th>
+        <th scope="col">Done</th>
+        <th scope="col">Documents</th>
+        <th scope="col"></th>
+        </tr>
+
+         {% if machine %}
+            {% for project in machine.maintenances.all|dictsortreversed:"start" %}
+            <tr  style="vertical-align:top">
+                <td><a href="{% url 'fablabcontrol:user' project.user.id %}">{{ project.user.user.first_name|escape}} {{ project.user.user.last_name|escape}}</a></td>
+                <td>{{ project.scheduled|date:"D d M Y" }}  {{ project.scheduled|time:"H:i" }}</td>
+                <td>{{ project.duration|time:"H:i"  }}</td>
+                <td>{{ project.start|date:"D d M Y" }}  {{ project.start|time:"H:i" }}</td>
+                <td>{{ project.stop|date:"D d M Y" }}  {{ project.stop|time:"H:i" }}</td>
+                <td>{{ project.todo|escape }}</td>
+                <td>{{ project.done|escape|linebreaks|truncatewords_html:15 }}</td>
+                <td>
+                 {% for doc in project.documents.all %}
+                    <a href="{{ doc }}">{{ forloop.counter }}</a>,
+                 {% endfor %}
+                </td>
+                {% if request.user.is_superuser %}<td align="right"><strong><a href="{% url 'fablabcontrol:mod_maintenance' project.id %}">Modify</a></strong></td>{% endif %}
+            </tr>
+            {% endfor %}
+        {% elif fablabuser %}
+            {% for project in fablabuser.maintenances.all|dictsortreversed:"start" %}
+            <tr  style="vertical-align:top">
+                <td><a href="{% url 'fablabcontrol:machine' project.machine.id %}">{{ project.machine.name|escape}}</a></td>
+                <td>{{ project.scheduled|date:"D d M Y" }}  {{ project.scheduled|time:"H:i" }}</td>
+                <td>{{ project.duration|time:"H:i" }}</td>
+                <td>{{ project.start|date:"D d M Y" }}  {{ project.start|time:"H:i" }}</td>
+                <td>{{ project.stop|date:"D d M Y" }}  {{ project.stop|time:"H:i" }}</td>
+                <td>{{ project.todo|escape }}</td>
+                <td>{{ project.done|escape|linebreaks|truncatewords_html:15 }}</td>
+                <td>
+                     {% for doc in project.documents.all %}
+                        <a href="{{ doc }}">{{ doc  }}</a>,
+                     {% endfor %}
+                </td>
+                {% if request.user.is_superuser %}<td align="right"><strong><a href="{% url 'fablabcontrol:mod_maintenance' project.id %}">Modify</a></strong></td>{% endif %}
+            </tr>
+            {% endfor %}
+        {% elif maintenances %}
+            <tr style="vertical-align:top">
+             {% for project in maintenances %}
+                <td><a href="{% url 'fablabcontrol:machine' project.machine.id %}">{{ project.machine.name|escape}}</a></td>
+                <td><a href="{% url 'fablabcontrol:user' project.user.id %}">{{ project.user.user.first_name|escape}} {{ project.user.user.last_name|escape}}</a></td>
+                <td>{{ project.scheduled|date:"D d M Y" }}  {{ project.scheduled|time:"H:i" }}</td>
+                <td>{{ project.duration|time:"H:i" }}</td>
+                <td>{{ project.start|date:"D d M Y" }}  {{ project.start|time:"H:i" }}</td>
+                <td>{{ project.stop|date:"D d M Y" }}  {{ project.stop|time:"H:i" }}</td>
+                <td>{{ project.todo|escape }}</td>
+                <td>{{ project.done|escape|linebreaks|truncatewords_html:15 }}</td>
+                <td>
+                     {% for doc in project.documents.all %}
+                        <a href="{{ doc }}">{{ forloop.counter }}</a>,
+                     {% endfor %}
+                </td>
+                {% if request.user.is_superuser %}<td align="right"><strong><a href="{% url 'fablabcontrol:mod_maintenance' project.id %}">Modify</a></strong></td>{% endif %}
+            </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+	</div>
+{% elif form and maintenance %}
+    <h1>Modify Maintenance</h1>
+
+{% load i18n widget_tweaks %}
+
+    <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include "./formfields.html" %}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+            </div>
+        </div>
+    </form>
+{% elif form and request.user.is_superuser %}
+    <h1>Create Maintenance</h1>
+
+    {% load i18n widget_tweaks %}
+
+    <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include "./formfields.html" %}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                <button type="submit" class="btn btn-primary">{% trans "Create Maintenance" %}</button>
+            </div>
+        </div>
+    </form>
+{% elif maintenance %}
+    <h1><a href="{% url 'fablabcontrol:maintenances' %}">Maintenance</a></h1>
+    <div class="table-responsive">
+	<table class="table table-striped table-hover">
+        <tr><td width="25%"><strong>Machine</strong></td><td><a href="{% url 'fablabcontrol:machine' maintenance.machine.id %}">{{ maintenance.machine.name|escape}}</a></td></tr>
+        <tr><td><strong>Fab Lab User</strong></td><td><a href="{% url 'fablabcontrol:user' maintenance.user.id %}">{{ maintenance.user.user.first_name|escape}} {{ maintenance.user.user.last_name|escape}}</a></td></tr>
+        <tr><td><strong>Scheduled for</strong></td><td>{{ maintenance.scheduled|date:"D d M Y" }}  {{ maintenance.scheduled|time:"H:i" }}</td></tr>
+        <tr><td><strong>Planned duration</strong></td><td>{{ maintenance.duration|time:"H:i" }}</td></tr>
+        <tr><td><strong>Start</strong></td><td>{{ maintenance.start|date:"D d M Y" }}  {{ maintenance.start|time:"H:i" }}</td></tr>
+        <tr><td><strong>Stop</strong></td><td>{{ maintenance.stop|date:"D d M Y" }}  {{ maintenance.stop|time:"H:i" }}</td></tr>
+        <tr><td><strong>ToDo</strong></td><td>{{ maintenance.todo|escape  }}</td></tr>
+        <tr><td><strong>Done</strong></td><td>{{ maintenance.done|escape|linebreaks  }}</td></tr>
+        <tr><td><strong>Documents</strong></td>
+            <td>
+                {% for doc in maintenance.documents.all %}
+                    <a href="{{ doc }}">{{ forloop.counter }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+        {% if request.user.is_superuser %}<tr><td colspan="2" align="left"><strong><a href="{% url 'fablabcontrol:mod_maintenance' maintenance.id %}">Modify maintenance</a></strong></td></tr>{% endif %}
+    </table>
+	</div>
+{% endif %}
+
+
+{% block script %}
+<script type="text/javascript">
+    var socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+
+    socket.onopen = function () {
+        onOpen();
+    };
+    socket.onclose = function (evt) {
+        onClose(evt)
+    };
+    socket.onerror = function (evt) {
+        onError(evt)
+    };
+    socket.onmessage = function (evt) {
+        onMessage(evt)
+    };
+
+    function check_ws(){
+        if(! socket || socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSockets connection lost, creating new socket...');
+            socket = null;
+            socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+            socket.onopen = function () {
+                onOpen();
+            };
+            socket.onclose = function (evt) {
+                onClose(evt)
+            };
+            socket.onerror = function (evt) {
+                onError(evt)
+            };
+            socket.onmessage = function (evt) {
+                onMessage(evt)
+            };
+        }
+    }
+
+    function onOpen() {
+      //console.log('WebSockets connection created.');
+      writeToScreen('<span style="color: green;">WebSocket connected to FabLab server....</span> ');
+    };
+
+    function onClose(evt) {
+        writeToScreen('<span style="color: red;">WebSocket DISCONNECTED</span> ');
+        //check_ws();
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">WebSocket ERROR</span> ');
+        //check_ws();
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        document.getElementById("error_log").prepend(pre);
+    }
+
+    function onMessage(evt) {
+        var data = JSON.parse(evt.data);
+        //console.log(data);
+
+        var type = data['type'];
+
+        if (type == 'error') {
+            var pre = document.createElement("p");
+            pre.style.wordWrap = "break-word";
+            pre.innerHTML = '<span style="color: black;">WARNING: </span>' + data['text'];
+            document.getElementById("error_log").prepend(pre);
+        }
+    };
+
+    setInterval(check_ws, 5000);
+
+  </script>
+{% endblock script %}
+
+{% endblock content %}

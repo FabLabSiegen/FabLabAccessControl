@@ -1,0 +1,167 @@
+body{
+  padding:20px;
+}
+.search{
+  margin-left:10px;
+}
+
+/*Cardview*/
+.cardContainer {
+    /*width:85%;*/
+}
+
+.card {
+    background-color:#fff;
+    border: 1px solid #d4d4d4;
+    /*height:300px;*/
+	/*min-width: 280px;*/
+	/*width: 280px;*/
+    margin-bottom: 20px;
+    /*position: relative;*/
+    border-radius: 10px 10px 10px 10px;
+	font-size:12pt;
+}
+
+.cardHeader {
+	background-color: #428bca;
+	/*background-color: #5bc0de;*/
+	/*background-color:#027FF4;*/
+    font-size:16pt;
+    color:white;
+    padding:5px;
+    /*width:100%;*/
+	border-radius: 10px 10px 0px 0px;
+
+}
+
+.cardClose {
+    color: white;
+    font-weight:bold;
+    margin-right:5px;
+}
+
+
+.cardBody {
+    padding-left: 5px;
+}
+
+.cardBodyLeft {
+    /*margin-top: 20px;*/
+}
+
+.cardBodyRight {
+    /*margin-left: 20px;*/
+    margin-top: 2px;
+}
+
+.cardBodyContent {
+    /*width: 100px;*/
+	/*margin-left: 20px;*/
+    /*margin-top: 20px;*/
+
+}
+
+.cardImage {
+    /*height:50px;width:50px;margin-top:20px;margin-left:20px;*/
+	/*min-width:100%;*/
+    min-height:75%;
+	/*height: 100%;*/
+	/*width: 100%;*/
+}
+
+.cardIcon {
+    padding-left: 0px;
+	padding-right: 0px;
+}
+
+.cardReading {
+    font-size: 22pt;
+	font-weight:bold;
+	white-space: nowrap;
+}
+.cardInfo {
+    font-size: 12pt;
+	color: #bbb;
+	white-space: nowrap;
+	float: right;
+	margin-right: -10px;
+}
+
+.cardBig {
+    font-size: 30pt;
+}
+
+.cardBigBig {
+    font-size: 40pt;
+}
+
+.cardOn {
+    color: #E6B800;
+    /*color: #FFCC00;*/
+}
+
+.cardOff {
+    color: #bbb;
+}
+
+.production {
+	color: green;
+}
+.vsize50 {
+	height: 50px;
+}
+.vsize100 {
+	height: 100px;
+}
+.vflex1 {
+   display: -webkit-flex;
+   display: flex;
+   -webkit-flex-direction: row /* works with row or column */
+   flex-direction: row;
+   -webkit-align-items: center;
+   align-items: center;
+   -webkit-justify-content: center;
+   justify-content: center;
+}
+
+.vcenter {
+display: -webkit-box;
+-webkit-box-orient: horizontal;
+-webkit-box-pack: center;
+-webkit-box-align: center;
+
+display: -moz-box;
+-moz-box-orient: horizontal;
+-moz-box-pack: center;
+-moz-box-align: center;
+
+display: box;
+box-orient: horizontal;
+box-pack: center;
+box-align: center;
+}
+
+.vcenter1{
+   /*margin: 0;*/
+   position: absolute;
+   top: 50%;
+   transform: translate(0, -50%)
+}
+
+.vcenter2 {
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}
+
+.vfull {
+   height: 100%;
+}
+
+/*fix tooltip width bootstrap*/
+.tooltip-inner {
+    max-width: 350px;
+    /* If max-width does not work, try using width instead */
+    width: 250px;
+}
+

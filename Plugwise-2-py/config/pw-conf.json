@@ -1,0 +1,19 @@
+{"static": [
+{"mac": "0000000000000000", "category": "IT", "name": "circle+", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "LulzBot TAZ", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "MakerBot 2X", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "PrintrBot", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "Markforged 1", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "Markforged 2", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "MakerBot Replicator", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "Formlabs Form 1", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "Ultimaker 2 Extended", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "3D-Drucker", "name": "AYA", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "IT", "name": "iMac", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "IT", "name": "Surface Staender", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "Werkzeug", "name": "Loetstation und Absauger", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "Werkzeug", "name": "EAS Laser", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "Werkzeug", "name": "EAS Fraese", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "Werkzeug", "name": "Staenderbohrmaschine", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"},
+{"mac": "0000000000000000", "category": "Werkzeug", "name": "X-Carve Fraese", "loginterval": "15", "always_on": "False", "production": "False", "location": "FabLab"}
+]}

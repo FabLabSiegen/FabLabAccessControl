@@ -1,0 +1,479 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if request.user.is_superuser and not form %}
+        <p><a href="{% url 'fablabcontrol:new_activity' %}">Create new activity</a>{% if activity %} - <a href="{% url 'fablabcontrol:mod_activity' activity.id %}">Modify activity</a>{% endif %}</p>
+{% endif %}
+{% if request.user.is_superuser %}
+    {% if machine or fablabuser or activities %}
+        {% if machine %}
+            <h1><a href="{% url 'fablabcontrol:activities' %}">Activity</a> of machine <a href="{% url 'fablabcontrol:machine' machine.id %}">{{ machine.name|escape  }}</a></h1>
+        {% elif fablabuser %}
+            <h1><a href="{% url 'fablabcontrol:activities' %}">Activity</a> of user <a href="{% url 'fablabcontrol:user' fablabuser.id %}">{{ fablabuser.user.first_name|escape}} {{ fablabuser.user.last_name|escape}}</a></h1>
+        {% elif activities %}
+            <h1 class="section-header-title">Fab Lab Activities</h1>
+        {% endif %}
+        <div class="table-responsive">
+        <table class="table table-striped table-hover">
+             <tr>
+            {% if machine %}
+                 <th scope="col">Fab Lab User</th>
+            {% elif fablabuser %}
+                 <th scope="col">Machine</th>
+            {% elif activities%}
+                <th scope="col">Machine</th>
+                <th scope="col">Fab Lab User</th>
+            {% endif %}
+            <th scope="col">Start </th>
+            <th scope="col">Stop</th>
+            <th scope="col">Description</th>
+            <th scope="col">Documents</th>
+            <th scope="col"></th>
+            </tr>
+             {% if machine %}
+                {% for project in machine.activities.all|dictsortreversed:"datestart" %}
+                <tr  style="vertical-align:top">
+                    <td><a href="{% url 'fablabcontrol:user' project.user.id %}">{{ project.user.user.first_name|escape}} {{ project.user.user.last_name|escape}}</a></td>
+                    <td>{{ project.datestart|date:"D d. M. Y" }}  {{ project.datestart|time:"H:i" }}</td>
+                    <td>{{ project.datestop|date:"D d. M. Y" }}  {{ project.datestop|time:"H:i" }}</td>
+                    <td>{{ project.description|escape|linebreaks|truncatewords_html:15  }}</td>
+                    <td>
+                     {% for doc in project.documents.all %}
+                        <a href="{{ doc }}"><IMG SRC="{{ doc }}" WIDTH=64 HEIGHT=64></a>,
+                     {% endfor %}
+                    </td>
+                    <td align="right"><button type="button" class="btn btn-warning" onclick="location.href='{% url 'fablabcontrol:mod_activity' project.id %}';">Modify</button></td>
+                </tr>
+                {% endfor %}
+            {% elif fablabuser %}
+
+                {% for project in fablabuser.activities.all|dictsortreversed:"datestart" %}
+                <tr  style="vertical-align:top">
+                    <td><a href="{% url 'fablabcontrol:machine' project.machine.id %}">{{ project.machine.name|escape}}</a></td>
+                    <td>{{ project.datestart|date:"D d. M. Y" }}  {{ project.datestart|time:"H:i" }}</td>
+                    <td>{{ project.datestop|date:"D d. M. Y" }}  {{ project.datestop|time:"H:i" }}</td>
+                    <td>{{ project.description|escape|linebreaks  }}</td>
+                    <td>
+                         {% for doc in project.documents.all %}
+                            <a href="{{ doc }}"><IMG SRC="{{ doc }}" WIDTH=64 HEIGHT=64></a>
+                         {% endfor %}
+                    </td>
+                    <td align="right"><button type="button" class="btn btn-warning" onclick="location.href='{% url 'fablabcontrol:mod_activity' project.id %}';">Modify</button></td>
+                </tr>
+                {% endfor %}
+            {% elif activities %}
+                <tr style="vertical-align:top">
+                 {% for project in activities %}
+                    <td><a href="{% url 'fablabcontrol:machine' project.machine.id %}">{{ project.machine.name|escape}}</a></td>
+                    <td><a href="{% url 'fablabcontrol:user' project.user.id %}">{{ project.user.user.first_name|escape}} {{ project.user.user.last_name|escape}}</a></td>
+                    <td>{{ project.datestart|date:"D d. M. Y" }}  {{ project.datestart|time:"H:i" }}</td>
+                    <td>{{ project.datestop|date:"D d. M. Y" }}  {{ project.datestop|time:"H:i" }}</td>
+                    <td>{{ project.description|escape|linebreaks|truncatewords_html:15  }}</td>
+                    <td>
+                         {% for doc in project.documents.all %}
+                            <a href="{{ doc }}"><IMG SRC="{{ doc }}" WIDTH=64 HEIGHT=64></a>
+                         {% endfor %}
+                    </td>
+                    <td align="right"><button type="button" class="btn btn-warning" onclick="location.href='{% url 'fablabcontrol:mod_activity' project.id %}';">Modify</button></td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+        </div>
+    {% elif form and activity %}
+
+        <h1>Modify Activity</h1>
+
+        {% load i18n widget_tweaks %}
+        {% with startdate=form.datestart stopdate=form.datestop %}
+        {% with startDateString=startdate.initial|date:"c" stopDateString=stopdate.initial|date:"c" %}
+
+        <script type="text/javascript">
+            $(function () {
+                $('#datepicker_{{ startdate.name }}').datetimepicker({
+                    locale: 'de',
+                    date: moment("{{ startDateString }}"),
+                    showTodayButton: true,
+                    widgetPositioning: {
+                        vertical: "bottom",
+                        horizontal: "right"
+                    }
+                });
+
+                $('#datepicker_{{ stopdate.name }}').datetimepicker({
+                    useCurrent: false, //Important! See issue #1075
+                    locale: 'de',
+                    date: moment("{{ stopDateString }}"),
+                    showTodayButton: true,
+                    widgetPositioning: {
+                        vertical: "bottom",
+                        horizontal: "right"
+                    }
+                });
+
+
+                $('#datepicker_{{ startdate.name }}').on("dp.change", function (e) {
+
+                    var stopDatePicker = $('#datepicker_{{ stopdate.name }}');
+
+                    // change stop date to start date when stop date is before start date
+                    if(e.date >= stopDatePicker.data("DateTimePicker").date()){
+                       var stopDateInputField = $('id_{{ startdate.name }}');
+                       stopDateInputField.fadeOut(200).fadeIn(200);
+                       var stopDate = e.date.add(1, 'hours');
+                       stopDatePicker.data("DateTimePicker").date(stopDate);
+
+                       console.log('changed date is larger then the stop date');
+                    }
+                });
+
+                $('#datepicker_{{ stopdate.name }}').on("dp.change", function (e) {
+                    var startDatePicker = $('#datepicker_{{ startdate.name }}');
+
+                    // change start date to stop date when start date is after stop date
+                    if(e.date <= startDatePicker.data("DateTimePicker").date()){
+                       var startDateInputField = $('id_{{ stopdate.name }}');
+                       startDateInputField.fadeOut(200).fadeIn(200);
+                       var stopDate = e.date.subtract(1, 'hours');
+                       startDatePicker.data("DateTimePicker").date(stopDate);
+                    }
+                });
+            });
+
+
+        </script>
+
+
+        <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {# Machine #}
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_{{ form.machine.name }}">{{ form.machine.label }}</label>
+                <div class="col-sm-8 col-lg-6">
+                    <p class="form-control-static"><a href="{% url 'fablabcontrol:machine' activity.machine.id %}">{{ activity.machine.name|escape}}</a></p>
+                </div>
+            </div>
+
+           {# User #}
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_{{ form.user.name }}">{{ form.user.label }}</label>
+                <div class="col-sm-8 col-lg-6">
+                    {% with "placeholder:"|add:form.user.label|title as placeholder %}
+                    {{ form.user|attr:"class:form-control"|attr:placeholder }}
+                    {% endwith %}
+                    {% if form.user.help_text %}
+                        <p class="help-block"><small>{{ form.user.help_text }}</small></p>
+                    {% endif %}
+                    </div>
+            </div>
+
+            {# Start Date #}
+
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_{{ startdate.name }}">{{ startdate.label }}</label>
+                <div class='col-sm-8 col-lg-6'>
+                    <div class='input-group date' id='datepicker_{{ startdate.name }}'>
+                        {% with "placeholder:"|add:startdate.label|title as placeholder %}
+                        {{ startdate|attr:"class:form-control"|attr:placeholder }}
+                        {% endwith %}
+                        <span class="input-group-addon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                    </div>
+                    {% if startdate.help_text %}
+                        <p class="help-block"><small>{{ startdate.help_text }}</small></p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            {# Stop Date #}
+
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_{{ stopdate.name }}">{{ stopdate.label }}</label>
+                <div class='col-sm-8 col-lg-6'>
+                    <div class='input-group date' id='datepicker_{{ stopdate.name }}'>
+                        {% with "placeholder:"|add:stopdate.label|title as placeholder %}
+                        {{ stopdate|attr:"class:form-control"|attr:placeholder }}
+                        {% endwith %}
+                        <span class="input-group-addon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                    </div>
+                    {% if stopdate.help_text %}
+                        <p class="help-block"><small>{{ stopdate.help_text }}</small></p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            {% endwith %}
+            {% endwith %}
+
+            {# Description #}
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_{{ form.description.name }}">{{ form.description.label }}</label>
+                <div class="col-sm-8 col-lg-6">
+                    {% with "placeholder:"|add:form.description.label|title as placeholder %}
+                    {{ form.description|attr:"class:form-control"|attr:placeholder }}
+                    {% endwith %}
+                    {% if form.description.help_text %}
+                        <p class="help-block"><small>{{ form.description.help_text }}</small></p>
+                    {% endif %}
+                    </div>
+            </div>
+
+
+            {# Already attached files #}
+            {% if activity.documents.all %}
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Attached Files</label>
+                <div class="col-sm-8 col-lg-6">
+                    <p class="form-control-static">
+                        {% for doc in activity.documents.all %}
+                            <a href="{{ doc }}"><IMG SRC="{{ doc }}" WIDTH=100 HEIGHT=100></a>
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+
+            {# Attach new files #}
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_{{ form.file_field.name }}">{{ form.file_field.label }}</label>
+                <div class="col-sm-8 col-lg-6">
+                    {% with "placeholder:"|add:form.file_field.label|title as placeholder %}
+                    {{ form.file_field|attr:"class:form-control"|attr:placeholder }}
+                    {% endwith %}
+                    {% if form.file_field.help_text %}
+                        <p class="help-block"><small>{{ form.file_field.help_text }}</small></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Machine - hidden but needed #}
+            {{ form.machine }}
+
+            {# submit button #}
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Update Activity" %}</button>
+                </div>
+            </div>
+        </form>
+
+    <div>
+        <p><H3><strong>Add Documentation</strong></H3></p>
+        <p>
+        <button class="btn btn-default btn-lg" id="start_video">Record Video</button>
+        </p>
+        <p>
+        <button class="btn btn-default btn-lg" id="snap">Take Photo</button>
+        </p>
+        <p>
+        <button class="btn btn-default btn-lg" id="set_photo">Send Photo</button>
+        </p>
+        <div  class="container"  style="float:left" id="pictures">
+            <video id="video" width="320" height="240"></video>
+        </div>
+    </div>
+
+    {% elif form.fields %}
+        <h1>Create Activity</h1>
+
+        {% load i18n widget_tweaks %}
+
+        <form class="form-horizontal row" role="form" action="." method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% include "./formfields.html" %}
+
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Create Activity" %}</button>
+                </div>
+            </div>
+        </form>
+
+    {% elif activity%}
+        <h1><a href="{% url 'fablabcontrol:activities' %}">Activity</a></h1>
+        <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <tr>
+                <td width="25%"><strong>Machine</strong></td>
+                <td><a href="{% url 'fablabcontrol:machine' activity.machine.id %}">{{ activity.machine.name|escape}}</a></td>
+            </tr>
+            <tr>
+                <td><strong>Fab Lab User</strong></td>
+                <td><a href="{% url 'fablabcontrol:user' activity.user.id %}">{{ activity.user.user.first_name|escape}} {{ activity.user.user.last_name|escape}}</a></td>
+            </tr>
+            <tr>
+                <td><strong>Start</strong></td>
+                <td>{{ activity.datestart|date:"D d M Y" }}  {{ activity.datestart|time:"H:i" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Stop</strong></td>
+                <td>{{ activity.datestop|date:"D d M Y" }}  {{ activity.datestop|time:"H:i" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Description</strong></td>
+                <td>{{ activity.description|escape|linebreaks }}</td>
+            </tr>
+            <tr>
+                <td><strong>Documents</strong></td>
+                <td>
+                    {% for doc in activity.documents.all %}
+                        <a href="{{ doc }}">{{ forloop.counter }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}</td>
+            </tr>
+        </table>
+        </div>
+    {% endif %}
+
+
+{% endif %}
+
+     
+     
+
+{% block script %}
+<script type="text/javascript">
+    //websocket
+    var socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+
+    socket.onopen = function () {
+        onOpen();
+    };
+    socket.onclose = function (evt) {
+        onClose(evt)
+    };
+    socket.onerror = function (evt) {
+        onError(evt)
+    };
+    socket.onmessage = function (evt) {
+        onMessage(evt)
+    };
+
+    function check_ws(){
+        if(! socket || socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSockets connection lost, creating new socket...');
+            socket = null;
+            socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+            socket.onopen = function () {
+                onOpen();
+            };
+            socket.onclose = function (evt) {
+                onClose(evt)
+            };
+            socket.onerror = function (evt) {
+                onError(evt)
+            };
+            socket.onmessage = function (evt) {
+                onMessage(evt)
+            };
+        }
+    }
+
+    function onOpen() {
+      //console.log('WebSockets connection created.');
+      writeToScreen('<span style="color: green;">WebSocket connected to FabLab server....</span> ');
+    };
+
+    function onClose(evt) {
+        writeToScreen('<span style="color: red;">WebSocket DISCONNECTED</span> ');
+        //check_ws();
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">WebSocket ERROR</span> ');
+        //check_ws();
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        document.getElementById("error_log").prepend(pre);
+    }
+
+    function onMessage(evt) {
+        var data = JSON.parse(evt.data);
+        //console.log(data);
+        var type = data['type'];
+
+        if (type == 'error') {
+            var pre = document.createElement("p");
+            pre.style.wordWrap = "break-word";
+            pre.innerHTML = '<span style="color: black;">WARNING: </span>' + data['text'];
+            document.getElementById("error_log").prepend(pre);
+        }
+    };
+
+    // Elements for taking the snapshot
+    var pictures = document.getElementById('pictures');
+    if (pictures != null) {
+
+
+        //var activity = document.getElementById('id_username');
+
+        // Start video
+        document.getElementById("start_video").addEventListener("click", function() {
+            // Get access to the camera!
+            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    video.src = window.URL.createObjectURL(stream);
+                    //video.play();
+                });
+            }
+            video.play();
+        });
+
+        // Trigger photo take
+        document.getElementById("snap").addEventListener("click", function() {
+            var pre = document.createElement("canvas");
+            pre.id="user_picture_view";
+            pre.width="320";
+            pre.height="240";
+            pictures.append(pre);
+
+            var pre = document.createElement("canvas");
+            pre.id="user_picture";
+            pre.style.display="none";
+            pre.width="1024";
+            pre.height="768";
+            pictures.append(pre);
+
+            var user_picture = document.getElementById('user_picture');
+            var user_picture_view = document.getElementById('user_picture_view');
+
+            var c_save = user_picture.getContext('2d');
+            var c_view= user_picture_view.getContext('2d');
+            var video = document.getElementById('video');
+
+            c_view.drawImage(video, 0, 0, 320, 240);
+            c_save.drawImage(video, 0, 0, 1024, 768);
+        });
+
+        // Trigger photo send
+        document.getElementById("set_photo").addEventListener("click", function() {
+            //in base64 konvertieren
+            var user_picture = document.getElementById('user_picture');
+            var image = user_picture.toDataURL("image/png", 1.0);
+            //infos abschneiden
+            var data = image.substr(22);
+            var path = window.location.pathname.split("/");
+            var msg = "{\"cmd\":\"activityimage\", \"activity\":\"" + path[path.length - 2] + "\", \"data\":\"" + data + "\"}";
+            socket.send(msg);
+        });
+    }
+    setInterval(check_ws, 5000);
+  </script>
+{% endblock script %}
+{% endblock content %}

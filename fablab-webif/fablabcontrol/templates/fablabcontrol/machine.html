@@ -1,0 +1,369 @@
+{% extends 'fablabcontrol/base.html' %}
+
+{% block content %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if request.user.is_superuser and not form %}
+    <p><a href="{% url 'fablabcontrol:new_machine' %}">Create new machine</a>{% if machine %} - <a href="{% url 'fablabcontrol:mod_machine' machine.id %}">Modify machine</a> - <a href="{% url 'fablabcontrol:machine_energy' machine.id %}">Energy monitor</a>{% elif machines %} - <a href="{% url 'fablabcontrol:machines_energy' %}">Energy monitor</a>{% endif %}</p>
+{% endif %}
+{% if machines %}
+<h1>Machines</h1>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <caption>All available machines</caption>
+        <tr>
+            <th scope="col">Machine Name</th>
+            <th scope="col">Current User</th>
+            <th scope="col">Circles</th>
+            <th scope="col">Status</th>
+            <th scope="col">Consumption</th>
+            {% if request.user.is_superuser %}
+            <th scope="col">Switch</th>
+            <th scope="col"></th>
+            {% endif %}
+        </tr>
+        {% for machine in machines %}
+            <tr valign="top">
+            <td><a href="{% url 'fablabcontrol:machine' machine.id %}">{{ machine.name|escape}}</a></td>
+            <td data-machstatus='{{ machine.id }}'>{% if machine.user %}<a href="{% url 'fablabcontrol:user' machine.user.id %}">{{machine.user.user.first_name}} {{machine.user.user.last_name}}</a>{% else %}None{% endif %}</td>
+            <td><table class="innerTable">{% for circle in machine.circles.all %}<tr><td align="left"><a href="{% url 'fablabcontrol:circle' circle.id %}">{{ circle.mac }}</a></td></tr>{% endfor %}</table></td>
+            <td><table class="innerTable">{% for circle in machine.circles.all %}<tr><td align="center"  data-circlestatus='{{ circle.id }}'><strong>{{ circle.status|escape }}</strong></td></tr>{% endfor %}</table></td>
+            <td><table class="innerTable">{% for circle in machine.circles.all %}<tr><td  data-circlepower='{{ circle.id }}'></td></tr>{% endfor %}</table></td>
+            {% if request.user.is_superuser %}
+                <td>
+                <button type="button" {% if machine.user %} class="btn btn-danger" {% else %} class="btn btn-success" {% endif %} data-switch='{{ machine.id }}' onclick="SwitchCircle({{ machine.id }});return false;">
+                {% if machine.user %}
+                off
+                {% else %}
+                on
+                {% endif %}
+                </button></td>
+                <td><button type="button" class="btn btn-warning btn-responsive" onclick="location.href='{% url 'fablabcontrol:mod_machine' machine.id %}';">Modify</button></td>
+            {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+{% elif machine and form and request.user.is_superuser%}
+
+<h1>Modify {{ machine.name }}</h1>
+
+{% load i18n widget_tweaks %}
+
+<form class="form-horizontal row" role="form" action="." method="post">
+    {% csrf_token %}
+
+    {% include "./formfields.html" %}
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Update Machine" %}</button>
+        </div>
+    </div>
+</form>
+
+{% elif form and request.user.is_superuser%}
+
+<h1>Create Machine</h1>
+
+
+{% load i18n widget_tweaks %}
+
+<form class="form-horizontal row" role="form" action="." method="post">
+    {% csrf_token %}
+
+    {% include "./formfields.html" %}
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-8 col-lg-6">
+            <button type="submit" class="btn btn-primary btn-lg btn-block">{% trans "Create Machine" %}</button>
+        </div>
+    </div>
+</form>
+
+
+{% elif machine %}
+    <h1>{{ machine.name |escape }}</h1>
+    <div class="table-responsive">
+    <table class="table table-striped table-hover mainTable">
+        <caption>Details for {{ machine.name }}</caption>
+        <tr>
+            <td width="25%"><strong>Current User</strong></td>
+            <td data-machstatus='{{machine.id }}'>{% if machine.user %}<a href="{% url 'fablabcontrol:user' machine.user.id%}">{{ machine.user.user.first_name |escape }} {{ machine.user.user.last_name |escape }}</a>{% else %}None{% endif %}</td>
+        </tr>
+        <tr>
+            <td><strong>Plugwise Circle{{ machine.circles.count|pluralize }}</strong></td>
+            <td>
+                <table width="50%" class="innerTable">
+                    <tr>
+                        <td>
+                            {% for circle in machine.circles.all %}
+                            <a href="{% url 'fablabcontrol:circle' circle.id%}">{{ circle.mac }}</a>{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>ESP controllers</strong></td>
+            <td>
+                {% for esp in machine.esps.all %}
+                <a href="{% url 'fablabcontrol:esp' esp.id%}">
+                {{ esp.mac }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+
+        </tr>
+        <tr>
+            <td><strong>Assigned Users</strong></td>
+        <td>
+            {% for user in machine.users.all %}
+                <a href="{% url 'fablabcontrol:user' user.id%}">
+                {{ user.user.first_name|escape }} {{ user.user.last_name|escape }}</a>{% if not forloop.last %}, {% endif %}
+
+            {% endfor %}
+        </td>
+        </tr>
+        <tr>
+            <td><strong>Circle status</strong></td>
+            <td>
+                <table width="50%" class="innerTable">
+                {% for circle in machine.circles.all %}
+                    <tr>
+                        <td data-circlestatus='{{ circle.id }}'>{{ circle.status|escape }}</td>
+                    </tr>
+                {% endfor %}
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Circle power</strong></td>
+            <td>
+                <table width="100%" class="innerTable">
+                    {% for circle in machine.circles.all %}
+                    <tr>
+                        <td data-circlepower='{{ circle.id }}'></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Description</strong></td>
+            <td>{{ machine.description|escape|linebreaks  }}</td>
+        </tr>
+            {% if request.user.is_superuser %}
+        <tr>
+            <td><strong>Switch manually</strong></td>
+            <td><a data-switch='{{ machine.id }}' href="#" onclick="SwitchCircle({{ machine.id }});return false;">
+            {% if machine.circle.status == 'off' %}
+              on
+            {% else %}
+              off
+            {% endif %}
+            </a>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+    </div>
+    <br>
+        {% if machine.activities %}
+            <a href="{% url 'fablabcontrol:machine_activity' machine.id %}"><H3>Activity monitor</H3></a>
+            <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <tr>
+                <th scope="col">Fab Lab User</th>
+                <th scope="col">Start </th>
+                <th scope="col">Stop</th>
+                <th scope="col">Description</th>
+                <th scope="col">Documents</th>
+                <th scope="col"></th>
+                </tr>
+            {% for project in machine.activities.all|dictsortreversed:"datestart"|slice:":5" %}
+                <tr  style="vertical-align:top">
+                    <td><a href="{% url 'fablabcontrol:user' project.user.id %}">{{ project.user.user.first_name|escape}} {{ project.user.user.last_name|escape}}</a></td>
+                    <td>{{ project.datestart|escape }}</td>
+                    <td>{{ project.datestop|escape }}</td>
+                    <td>{{ project.description|escape|linebreaks|truncatewords_html:15 }}</td>
+                    <td>
+                    {% for doc in project.documents.all %}
+                    <a href="{{ doc }}">{{ doc }}</a>,
+                    {% endfor %}
+                    </td>
+                    {% if request.user.is_superuser %}
+                    <td align="right"><strong><a href="{% url 'fablabcontrol:mod_activity' project.id %}">Modify</a></strong>
+                    </td>
+                    {% endif %}
+                </tr>
+             {% endfor %}
+            </table>
+            </div>
+        {% endif %}
+        {% if machine.maintenances %}
+            <H3><a href="{% url 'fablabcontrol:machine_maintenance' machine.id %}">Maintenance</a></H3>
+            <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <caption>Planned maintenances for {{ machine.name }}</caption>
+             <tr>
+                <th scope="col">User</th>
+                <th scope="col">Scheduled For</th>
+                <th scope="col">Planned Duration </th>
+                <th scope="col">Start</th>
+                <th scope="col">Stop</th>
+                <th scope="col">To Do</th>
+                <th scope="col">Done</th>
+                <th scope="col">Documents</th>
+                <th scope="col"></th>
+            </tr>
+
+             {% for project in machine.maintenances.all|dictsortreversed:"start"|slice:":5" %}
+                <tr  style="vertical-align:top">
+                    <td><a href="{% url 'fablabcontrol:user' project.user.id %}">{{ project.user.user.first_name|escape}} {{ project.user.user.last_name|escape}}</a></td>
+                    <td>{{ project.scheduled|date:"D d M Y" }}  {{ project.scheduled|time:"H:i" }}</td>
+                    <td>{{ project.duration|time:"H:i"  }}</td>
+                    <td>{{ project.start|date:"D d M Y" }}  {{ project.start|time:"H:i" }}</td>
+                    <td>{{ project.stop|date:"D d M Y" }}  {{ project.stop|time:"H:i" }}</td>
+                    <td>{{ project.todo|escape }}</td>
+                    <td>{{ project.done|escape|linebreaks|truncatewords_html:15 }}</td>
+                    <td>
+                         {% for doc in project.documents.all %}
+                            <a href="{{ doc }}">{{ doc  }}</a>{% if not forloop.last %}, {% endif %}
+                         {% endfor %}
+                    </td>
+                    {% if request.user.is_superuser %}<td align="right"><strong><a href="{% url 'fablabcontrol:mod_maintenance' project.id %}">Modify</a></strong></td>{% endif %}
+                </tr>
+                {% endfor %}
+            </table>
+            </div>
+        {% endif %}
+{% endif %}
+
+
+{% block script %}
+<script type="text/javascript">
+    var socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+
+    socket.onopen = function () {
+        onOpen();
+    };
+    socket.onclose = function (evt) {
+        onClose(evt)
+    };
+    socket.onerror = function (evt) {
+        onError(evt)
+    };
+    socket.onmessage = function (evt) {
+        onMessage(evt)
+    };
+
+    function check_ws(){
+        if(! socket || socket.readyState === WebSocket.CLOSED) {
+            console.log('WebSockets connection lost, creating new socket...');
+            socket = null;
+            socket = new WebSocket('ws://' + window.location.host + '/fablabcontrol/');
+            socket.onopen = function () {
+                onOpen();
+            };
+            socket.onclose = function (evt) {
+                onClose(evt)
+            };
+            socket.onerror = function (evt) {
+                onError(evt)
+            };
+            socket.onmessage = function (evt) {
+                onMessage(evt)
+            };
+        }
+    }
+
+    function onOpen() {
+      //console.log('WebSockets connection created.');
+      writeToScreen('<span style="color: green;">WebSocket connected to FabLab server....</span> ');
+    };
+
+    function onClose(evt) {
+        writeToScreen('<span style="color: red;">WebSocket DISCONNECTED</span> ');
+        //check_ws();
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">WebSocket ERROR</span> ');
+        //check_ws();
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        document.getElementById("error_log").prepend(pre);
+    }
+
+    function onMessage(evt) {
+        var data = JSON.parse(evt.data);
+        //console.log(data);
+
+        var type = data['type'];
+
+        if (type == 'power') {
+            var circle = data['circle'];
+            var cont = $('td').filter(function () {
+                return $(this).data('circlepower') == circle;
+            });
+            var power = encodeURI(data['power']);
+            if (power < 0) { power = 0.0; }
+            cont.html('<strong>' +  power + '</strong>');
+        } else if (type == 'circle') {
+            var circle = data['circle'];
+            var cont = $('td').filter(function () {
+                return $(this).data('circlestatus') == circle;
+            });
+            var circlestatus = encodeURI(data['switch']);
+            cont.html('<strong>' + circlestatus + '</strong>');
+        } else if (type == 'machine') {
+            var machine = data['machine'];
+            var cont = $('td').filter(function () {
+                return $(this).data('machstatus') == machine;
+            });
+            var user = encodeURI(data['user']);
+            cont.html('<strong>' + user + '</strong>');
+        } else if (type == 'error') {
+            var pre = document.createElement("p");
+            pre.style.wordWrap = "break-word";
+            pre.innerHTML = '<span style="color: black;">WARNING: </span>' + data['text'];
+            document.getElementById("error_log").prepend(pre);
+        }
+    }
+
+    function SwitchCircle(machine) {
+        //console.log("Schalte Maschine ID " + machine);
+
+        var cont = $('td').filter(function () {
+            return $(this).data('machstatus') == machine;
+        });
+
+        if (! (cont.text()=='None')) {
+             if (confirm("User active!\n\nPlease confirm switch!") == true) {
+                var msg = "{\"cmd\":\"switch\",\"data\":\"" + machine + "\"}";
+                socket.send(msg);
+            }
+        } else {
+            var msg = "{\"cmd\":\"switch\",\"data\":\"" + machine + "\"}";
+            socket.send(msg);
+        }
+
+        var cont = $('a').filter(function () {
+            return $(this).data('switch') == machine;
+        });
+
+        if (cont.text() == 'on') {
+            cont.text('off');
+        } else {
+            cont.text('on');
+        }
+    }
+
+     setInterval(check_ws, 5000);
+  </script>
+{% endblock script %}
+
+{% endblock content %}
